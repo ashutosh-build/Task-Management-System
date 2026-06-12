@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Taskflow</title>
+<link rel="stylesheet" href="/css/app.css"/>
+</head>
+<body>
+
+<!-- ══ AUTH ════════════════════════════════════════════════ -->
+<div id="auth-screen" class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-mark">✦</div>
+      <div><h1>Taskflow</h1><span>Spring Boot · Task Manager</span></div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="authTab('login')">Sign in</div>
+      <div class="auth-tab" onclick="authTab('signup')">Sign up</div>
+    </div>
+    <div id="form-login">
+      <div class="field"><label>Email</label>
+        <input id="l-email" type="email" value="demo@taskflow.app" autocomplete="email"/>
+      </div>
+      <div class="field"><label>Password</label>
+        <input id="l-pass" type="password" value="demo1234" autocomplete="current-password"/>
+      </div>
+      <div class="err" id="l-err"></div>
+      <button class="btn-primary" onclick="doLogin()">Sign in →</button>
+    </div>
+    <div id="form-signup" style="display:none">
+      <div class="field"><label>Full name</label>
+        <input id="s-name" type="text" placeholder="Jane Smith"/>
+      </div>
+      <div class="field"><label>Email</label>
+        <input id="s-email" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="field"><label>Password</label>
+        <input id="s-pass" type="password" placeholder="Min 8 characters"/>
+      </div>
+      <div class="err" id="s-err"></div>
+      <button class="btn-primary" onclick="doSignup()">Create account →</button>
+    </div>
+    <div class="demo-hint">Demo: <b>demo@taskflow.app</b> / <b>demo1234</b></div>
+  </div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════ -->
+<div id="app-screen" style="display:none">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo-mark sm">✦</div>
+    <span class="topbar-title">Taskflow</span>
+    <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+    <div style="flex:1"></div>
+    <div style="position:relative">
+      <button class="icon-btn" id="notif-btn" onclick="toggleNotif()">
+        🔔<div class="notif-badge" id="notif-badge" style="display:none"></div>
+      </button>
+      <div class="notif-panel" id="notif-panel" style="display:none"></div>
+    </div>
+    <div class="user-av" id="user-av">JD</div>
+    <span class="tb-name" id="tb-name">Jane</span>
+    <button class="icon-btn" onclick="doLogout()" title="Sign out">⎋</button>
+  </div>
+
+  <!-- Body -->
+  <div class="app-body">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Views</div>
+        <div class="nav-item active" id="ni-all"       onclick="navTo('all')">      <span>▤</span> All tasks  <span class="nb" id="nb-all"></span></div>
+        <div class="nav-item"        id="ni-today"     onclick="navTo('today')">    <span>◉</span> Today      <span class="nb" id="nb-today"></span></div>
+        <div class="nav-item"        id="ni-upcoming"  onclick="navTo('upcoming')"> <span>◷</span> Upcoming</div>
+        <div class="nav-item"        id="ni-done"      onclick="navTo('done')">     <span>✓</span> Completed</div>
+        <div class="nav-item"        id="ni-dashboard" onclick="navTo('dashboard')"><span>◈</span> Dashboard</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Projects</div>
+        <div class="nav-item" onclick="navTo('proj:Design')">     <span class="pdot" style="background:#8b7cf8"></span> Design</div>
+        <div class="nav-item" onclick="navTo('proj:Engineering')"><span class="pdot" style="background:#2dd4bf"></span> Engineering</div>
+        <div class="nav-item" onclick="navTo('proj:Marketing')">  <span class="pdot" style="background:#f87171"></span> Marketing</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Priority</div>
+        <div class="nav-item" onclick="navTo('pri:HIGH')">  <span style="color:var(--coral)">↑</span> High</div>
+        <div class="nav-item" onclick="navTo('pri:MEDIUM')"><span style="color:var(--amber)">→</span> Medium</div>
+        <div class="nav-item" onclick="navTo('pri:LOW')">   <span style="color:var(--green)">↓</span> Low</div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="main-hdr">
+        <div class="mh-top">
+          <h2 id="page-title">All Tasks</h2>
+          <div class="view-tog" id="view-tog">
+            <div class="vb active" id="vb-list"  onclick="setDisplay('list')"  title="List">☰</div>
+            <div class="vb"        id="vb-board" onclick="setDisplay('board')" title="Board">⊞</div>
+          </div>
+          <button class="btn-add" onclick="openModal(null)">+ New task</button>
+        </div>
+        <div class="filters" id="filters-row">
+          <div class="srch">
+            <span class="si">⌕</span>
+            <input id="search" type="text" placeholder="Search…" oninput="applyFilter()"/>
+          </div>
+          <button class="fb active" onclick="setStatusFilter('all',this)">All</button>
+          <button class="fb" onclick="setStatusFilter('TODO',this)">To do</button>
+          <button class="fb" onclick="setStatusFilter('INPROGRESS',this)">In progress</button>
+          <button class="fb" onclick="setStatusFilter('DONE',this)">Done</button>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row"></div>
+
+      <div class="content-area">
+        <div id="view-list" ><div class="task-scroll" id="task-list"></div></div>
+        <div id="view-board" style="display:none"><div class="board" id="kanban-board"></div></div>
+        <div id="view-dash"  style="display:none"><div class="dash"  id="dash-content"></div></div>
+        <div class="detail-panel" id="detail-panel"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ TASK MODAL ════════════════════════════════════════════ -->
+<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()" style="display:none">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modal-ttl">New task</h3>
+      <button class="mx" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Title *</label>
+        <input id="f-title" type="text" placeholder="What needs to be done?"/>
+      </div>
+      <div class="field"><label>Description</label>
+        <textarea id="f-desc" rows="3" placeholder="Add details…"></textarea>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Status</label>
+          <select id="f-status">
+            <option value="TODO">To do</option>
+            <option value="INPROGRESS">In progress</option>
+            <option value="REVIEW">In review</option>
+            <option value="DONE">Done</option>
+          </select>
+        </div>
+        <div class="field"><label>Priority</label>
+          <select id="f-priority">
+            <option value="HIGH">🔴 High</option>
+            <option value="MEDIUM" selected>🟡 Medium</option>
+            <option value="LOW">🟢 Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Due date</label>
+          <input id="f-due" type="date"/>
+        </div>
+        <div class="field"><label>Project</label>
+          <select id="f-project">
+            <option>Design</option><option>Engineering</option>
+            <option>Marketing</option><option>General</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Assignee</label>
+          <select id="f-assignee">
+            <option>You</option><option>Alice</option>
+            <option>Bob</option><option>Carol</option>
+          </select>
+        </div>
+        <div class="field"><label>Tags (comma separated)</label>
+          <input id="f-tags" type="text" placeholder="ui, bug, api"/>
+        </div>
+      </div>
+      <div class="err" id="f-err"></div>
+      <div class="modal-acts">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save"   onclick="saveTask()">Save task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
